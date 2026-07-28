@@ -4,12 +4,17 @@
  * 2.0; you may not use this file except in compliance with the Elastic License
  * 2.0.
  */
-import type { ChatCompleteMetadata, FunctionCallingMode } from '../chat_complete';
+import type {
+  ChatCompleteMetadata,
+  ChatCompleteReasoning,
+  FunctionCallingMode,
+} from '../chat_complete';
 
 export interface BoundOptions {
   functionCalling?: FunctionCallingMode;
   connectorId: string;
   metadata?: ChatCompleteMetadata;
+  reasoning?: ChatCompleteReasoning;
 }
 
 // All bound keys except `metadata`, which stays available for per-call overrides on bound APIs.
@@ -60,12 +65,13 @@ export function bindApi<T extends BindableAPI, U extends BoundOptions>(
 ): BoundAPI<T>;
 
 export function bindApi(api: BindableAPI, boundParams: BoundOptions) {
-  const { functionCalling, connectorId, metadata: boundMetadata } = boundParams;
+  const { functionCalling, connectorId, metadata: boundMetadata, reasoning } = boundParams;
   return (params: UnboundOptions<BoundOptions>) => {
     return api({
       ...params,
       functionCalling,
       connectorId,
+      ...(reasoning ? { reasoning } : {}),
       ...(boundMetadata ? { metadata: mergeBoundMetadata(boundMetadata, params.metadata) } : {}),
     });
   };

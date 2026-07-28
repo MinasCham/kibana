@@ -10,6 +10,7 @@ import type { Logger } from '@kbn/logging';
 import type {
   ChatCompletionChunkEvent,
   ChatCompletionTokenCountEvent,
+  ChatCompleteReasoning,
   FunctionCallingMode,
   Message,
   ToolOptions,
@@ -47,6 +48,7 @@ export type InferenceAdapterChatCompleteOptions = {
   functionCalling?: FunctionCallingMode;
   temperature?: number;
   modelName?: string;
+  reasoning?: ChatCompleteReasoning;
   abortSignal?: AbortSignal;
   metadata?: ChatCompleteMetadata;
   stream?: boolean;

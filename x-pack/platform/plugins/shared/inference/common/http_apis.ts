@@ -6,6 +6,7 @@
  */
 
 import type {
+  ChatCompleteReasoning,
   FunctionCallingMode,
   Message,
   ToolOptions,
@@ -19,6 +20,7 @@ export interface ChatCompleteRequestBodyBase {
   connectorId: string;
   temperature?: number;
   modelName?: string;
+  reasoning?: ChatCompleteReasoning;
   functionCalling?: FunctionCallingMode;
   maxRetries?: number;
   retryConfiguration?: {

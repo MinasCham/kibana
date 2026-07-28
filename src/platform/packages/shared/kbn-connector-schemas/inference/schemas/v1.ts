@@ -120,6 +120,35 @@ export const UnifiedChatCompleteParamsSchema = lazySchema(() =>
            */
           n: z.coerce.number().optional(),
           /**
+           * The reasoning configuration for the request, as accepted by the
+           * Elasticsearch unified chat completion API. Currently supported only
+           * for the `elastic` provider (EIS).
+           */
+          reasoning: z
+            .object({
+              /**
+               * The level of effort the model should put into reasoning, with
+               * `xhigh` being the most effort and `none` being no effort.
+               */
+              effort: z.enum(['xhigh', 'high', 'medium', 'low', 'minimal', 'none']).optional(),
+              /**
+               * Whether to enable reasoning with default settings. Ignored if
+               * `effort` is specified.
+               */
+              enabled: z.boolean().optional(),
+              /**
+               * Whether to exclude reasoning information from the response.
+               */
+              exclude: z.boolean().optional(),
+              /**
+               * The level of detail included in the reasoning summary returned
+               * in the response.
+               */
+              summary: z.enum(['auto', 'concise', 'detailed']).optional(),
+            })
+            .strict()
+            .optional(),
+          /**
            * Up to 4 sequences where the API will stop generating further tokens.
            */
           stop: z.union([z.string(), z.array(z.string())]).nullish(),

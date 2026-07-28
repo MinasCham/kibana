@@ -18,6 +18,7 @@ import { createServerRoute } from '../../../create_server_route';
 import { assertSignificantEventsAccess } from '../../../utils/assert_significant_events_access';
 import { STREAMS_API_PRIVILEGES } from '../../../../../common/constants';
 import { resolveConnectorForFeature } from '../../../utils/resolve_connector_for_feature';
+import { getReasoningForFeatureConnector } from '../../../../register_significant_events_inference_features';
 import { getRequestAbortSignal } from '../../../utils/get_request_abort_signal';
 import { formatInferenceProviderError } from '../../../utils/create_connector_sse_error';
 import {
@@ -166,6 +167,10 @@ const identifyInferredFeaturesRoute = createServerRoute({
         soClient,
         inferenceClient: inferenceClient.bindTo({
           connectorId,
+          reasoning: getReasoningForFeatureConnector(
+            SIGNIFICANT_EVENTS_KI_EXTRACTION_INFERENCE_FEATURE_ID,
+            connectorId
+          ),
           metadata: {
             connectorTelemetry: {
               pluginId: SIGNIFICANT_EVENTS_KI_EXTRACTION_INFERENCE_FEATURE_ID,

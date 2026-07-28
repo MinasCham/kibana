@@ -303,6 +303,72 @@ describe('inferenceAdapter', () => {
       });
     });
 
+    it('propagates the reasoning parameter when the connector provider is elastic', () => {
+      executorMock.getConnector.mockImplementation(() => {
+        return {
+          type: InferenceConnectorType.Inference,
+          name: 'inference connector',
+          connectorId: '.id',
+          config: { provider: 'elastic' },
+          capabilities: {},
+          isInferenceEndpoint: false,
+          isPreconfigured: false,
+        };
+      });
+
+      inferenceAdapter
+        .chatComplete({
+          logger,
+          executor: executorMock,
+          messages: [{ role: MessageRole.User, content: 'question' }],
+          reasoning: { effort: 'low' },
+        })
+        .subscribe(noop);
+
+      expect(executorMock.invoke).toHaveBeenCalledTimes(1);
+      expect(executorMock.invoke).toHaveBeenCalledWith({
+        subAction: 'unified_completion_stream',
+        subActionParams: expect.objectContaining({
+          body: expect.objectContaining({
+            reasoning: { effort: 'low' },
+          }),
+        }),
+      });
+    });
+
+    it('drops the reasoning parameter when the connector provider is not elastic', () => {
+      executorMock.getConnector.mockImplementation(() => {
+        return {
+          type: InferenceConnectorType.Inference,
+          name: 'inference connector',
+          connectorId: '.id',
+          config: { provider: 'openai' },
+          capabilities: {},
+          isInferenceEndpoint: false,
+          isPreconfigured: false,
+        };
+      });
+
+      inferenceAdapter
+        .chatComplete({
+          logger,
+          executor: executorMock,
+          messages: [{ role: MessageRole.User, content: 'question' }],
+          reasoning: { effort: 'low' },
+        })
+        .subscribe(noop);
+
+      expect(executorMock.invoke).toHaveBeenCalledTimes(1);
+      expect(executorMock.invoke).toHaveBeenCalledWith({
+        subAction: 'unified_completion_stream',
+        subActionParams: expect.objectContaining({
+          body: expect.not.objectContaining({
+            reasoning: expect.anything(),
+          }),
+        }),
+      });
+    });
+
     it('propagates the modelName parameter', () => {
       inferenceAdapter
         .chatComplete({

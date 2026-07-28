@@ -9,6 +9,7 @@ import { defer, switchMap, identity } from 'rxjs';
 import type { Observable } from 'rxjs';
 import type { Logger } from '@kbn/logging';
 import type {
+  ChatCompleteReasoning,
   FunctionCallingMode,
   Message,
   ToolOptions,
@@ -16,6 +17,7 @@ import type {
   ChatCompletionChunkEvent,
   ChatCompletionTokenCountEvent,
 } from '@kbn/inference-common';
+import { InferenceEndpointProvider } from '@kbn/inference-common';
 import { eventSourceStreamIntoObservable } from '../../../util/event_source_stream_into_observable';
 import {
   processOpenAIStream,
@@ -39,6 +41,16 @@ export interface InferenceEndpointAdapterChatCompleteOptions {
   functionCalling?: FunctionCallingMode;
   temperature?: number;
   modelName?: string;
+  /**
+   * Reasoning configuration for the request. Only sent when the endpoint's
+   * provider is `elastic` (EIS), dropped otherwise.
+   */
+  reasoning?: ChatCompleteReasoning;
+  /**
+   * The service/provider of the inference endpoint, used to decide whether
+   * provider-specific options such as `reasoning` can be sent.
+   */
+  provider?: string;
   abortSignal?: AbortSignal;
   metadata?: ChatCompleteMetadata;
   stream?: boolean;
@@ -60,6 +72,8 @@ export const inferenceEndpointAdapter = {
       functionCalling,
       temperature = 0,
       modelName,
+      reasoning,
+      provider,
       logger,
       abortSignal,
       timeout,
@@ -76,6 +90,8 @@ export const inferenceEndpointAdapter = {
       simulatedFunctionCalling: useSimulatedFunctionCalling,
       temperature,
       modelName,
+      // reasoning is currently only supported by the elastic provider (EIS)
+      reasoning: provider === InferenceEndpointProvider.Elastic ? reasoning : undefined,
     });
 
     return defer(() =>
@@ -102,6 +118,7 @@ const createEndpointRequest = ({
   simulatedFunctionCalling,
   temperature = 0,
   modelName,
+  reasoning,
 }: {
   system?: string;
   messages: Message[];
@@ -110,6 +127,7 @@ const createEndpointRequest = ({
   simulatedFunctionCalling: boolean;
   temperature?: number;
   modelName?: string;
+  reasoning?: ChatCompleteReasoning;
 }): OpenAIRequest => {
   if (simulatedFunctionCalling) {
     const wrapped = wrapWithSimulatedFunctionCalling({
@@ -120,6 +138,7 @@ const createEndpointRequest = ({
     });
     return {
       ...(temperature >= 0 ? { temperature } : {}),
+      ...(reasoning ? { reasoning } : {}),
       model: modelName,
       messages: messagesToOpenAI({ system: wrapped.system, messages: wrapped.messages }),
     };
@@ -130,6 +149,7 @@ const createEndpointRequest = ({
 
   return {
     ...(temperature >= 0 ? { temperature } : {}),
+    ...(reasoning ? { reasoning } : {}),
     model: modelName,
     messages: messagesToOpenAI({ system, messages }),
     ...(hasTools

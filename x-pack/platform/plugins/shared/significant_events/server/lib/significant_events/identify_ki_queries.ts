@@ -17,6 +17,7 @@ import { identifyKIQueries as identifyKIQueriesThroughAgent } from '@kbn/streams
 import type { SignificantEventsToolUsage } from '@kbn/streams-ai';
 import type { ToolCallback, ToolDefinition } from '@kbn/inference-common';
 import type { KnowledgeIndicatorClient } from '../knowledge_indicators';
+import { getReasoningForFeatureConnector } from '../../register_significant_events_inference_features';
 import type { MemoryDiscoveryTools } from './memory_discovery_tools';
 import type { KiExtractionContextTools } from './ki_extraction_context_tools';
 import type { SemanticCodeSearchTools } from '../semantic_code_search_grounding/semantic_code_search_tools';
@@ -110,6 +111,10 @@ export async function identifyKIQueries(
 
   const boundInferenceClient = inferenceClient.bindTo({
     connectorId,
+    reasoning: getReasoningForFeatureConnector(
+      SIGNIFICANT_EVENTS_KI_QUERY_GENERATION_INFERENCE_FEATURE_ID,
+      connectorId
+    ),
     metadata: {
       connectorTelemetry: {
         pluginId: SIGNIFICANT_EVENTS_KI_QUERY_GENERATION_INFERENCE_FEATURE_ID,

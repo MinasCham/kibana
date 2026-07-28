@@ -32,6 +32,8 @@ export {
   type ChatCompleteAPI,
   type ChatCompleteAPIResponse,
   type ChatCompleteOptions,
+  type ChatCompleteReasoning,
+  type ChatCompleteReasoningEffort,
   type ChatCompleteCompositeResponse,
   type ChatCompletionTokenCountEvent,
   type ChatCompletionEvent,

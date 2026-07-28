@@ -80,6 +80,29 @@ export type ChatCompleteAPI = <TOptions extends ChatCompleteOptions>(
 ) => ChatCompleteAPIResponse<TOptions>;
 
 /**
+ * The level of effort the model should put into reasoning, `xhigh` being
+ * the most effort and `none` being no effort.
+ *
+ * Mirrors the `reasoning.effort` values accepted by the Elasticsearch
+ * unified chat completion API.
+ */
+export type ChatCompleteReasoningEffort = 'xhigh' | 'high' | 'medium' | 'low' | 'minimal' | 'none';
+
+/**
+ * Reasoning configuration for a chat completion request.
+ *
+ * Mirrors the `reasoning` object accepted by the Elasticsearch unified
+ * chat completion API. Currently only honored by EIS (`elastic` provider)
+ * inference endpoints; it is dropped for all other providers.
+ */
+export interface ChatCompleteReasoning {
+  /**
+   * The level of effort the model should put into reasoning.
+   */
+  effort?: ChatCompleteReasoningEffort;
+}
+
+/**
  * Options used to call the {@link ChatCompleteAPI}.
  *
  * `connectorId` accepts both Kibana stack connector IDs (OpenAI, Bedrock, Gemini, etc.)
@@ -112,6 +135,13 @@ export type ChatCompleteOptions = {
    * Defaults to the default model as defined by the used connector.
    */
   modelName?: string;
+  /**
+   * Reasoning configuration for the request, e.g. `{ effort: 'low' }`.
+   *
+   * Currently honored only by EIS (`elastic` provider) inference endpoints;
+   * dropped for all other providers.
+   */
+  reasoning?: ChatCompleteReasoning;
   /**
    * Function calling mode, defaults to "auto".
    */

@@ -23,6 +23,7 @@ export const inferenceAdapter: InferenceConnectorAdapter = {
     functionCalling,
     temperature,
     modelName,
+    reasoning,
     logger,
     abortSignal,
     metadata,
@@ -42,6 +43,7 @@ export const inferenceAdapter: InferenceConnectorAdapter = {
       simulatedFunctionCalling: useSimulatedFunctionCalling,
       temperature,
       modelName,
+      reasoning,
     });
 
     return defer(() => {

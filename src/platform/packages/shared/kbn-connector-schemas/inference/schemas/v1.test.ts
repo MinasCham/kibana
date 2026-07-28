@@ -160,6 +160,44 @@ describe('Inference Schema', () => {
       ).not.toThrow();
     });
 
+    it('validates with a reasoning object', () => {
+      expect(() =>
+        UnifiedChatCompleteParamsSchema.parse({
+          body: {
+            messages: [{ role: 'user', content: 'Hello' }],
+            reasoning: {
+              effort: 'low',
+              enabled: true,
+              exclude: false,
+              summary: 'concise',
+            },
+          },
+        })
+      ).not.toThrow();
+    });
+
+    it('throws on an invalid reasoning effort', () => {
+      expect(() =>
+        UnifiedChatCompleteParamsSchema.parse({
+          body: {
+            messages: [],
+            reasoning: { effort: 'extreme' },
+          },
+        })
+      ).toThrow();
+    });
+
+    it('throws on unknown reasoning properties', () => {
+      expect(() =>
+        UnifiedChatCompleteParamsSchema.parse({
+          body: {
+            messages: [],
+            reasoning: { effort: 'low', unknownProp: true },
+          },
+        })
+      ).toThrow();
+    });
+
     it('validates tool_choice as object', () => {
       expect(() =>
         UnifiedChatCompleteParamsSchema.parse({

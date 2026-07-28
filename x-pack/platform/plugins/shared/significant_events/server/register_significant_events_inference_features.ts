@@ -18,12 +18,21 @@ import {
   SIGNIFICANT_EVENTS_MEMORY_INFERENCE_FEATURE_ID,
 } from '@kbn/significant-events-schema';
 import { defaultInferenceEndpoints } from '@kbn/inference-common';
+import type { ChatCompleteReasoning, ChatCompleteReasoningEffort } from '@kbn/inference-common';
 
 const KI_EXTRACTION_RECOMMENDED_MODELS = [
   defaultInferenceEndpoints.OPENAI_GPT_5_4,
   defaultInferenceEndpoints.OPENAI_GPT_OSS_120B,
   defaultInferenceEndpoints.ANTHROPIC_CLAUDE_4_6_SONNET,
 ];
+
+// Extraction runs in the background over many streams, so favor latency and
+// cost over reasoning depth on models that reason by default.
+const KI_EXTRACTION_REASONING_EFFORT: Record<string, ChatCompleteReasoningEffort> = {
+  [defaultInferenceEndpoints.OPENAI_GPT_5_4]: 'low',
+};
+
+const KI_QUERY_GENERATION_REASONING_EFFORT: Record<string, ChatCompleteReasoningEffort> = {};
 
 const KI_QUERY_GENERATION_RECOMMENDED_MODELS = [
   defaultInferenceEndpoints.ANTHROPIC_CLAUDE_4_6_SONNET,
@@ -58,6 +67,33 @@ const MEMORY_RECOMMENDED_MODELS = [
   '.anthropic-claude-4.5-haiku-chat_completion',
   '.openai-gpt-5.4-mini-chat_completion',
 ];
+
+// Per-feature reasoning effort for recommended EIS endpoints. Only features
+// whose invocation path goes through `inferenceClient.bindTo` can honor these
+// today (KI extraction and KI query generation); discovery, triage,
+// investigation and memory invoke their connector from workflow definitions.
+// No entry means no `reasoning` is sent and the model uses its own default.
+const REASONING_EFFORT_BY_FEATURE: Record<string, Record<string, ChatCompleteReasoningEffort>> = {
+  [SIGNIFICANT_EVENTS_KI_EXTRACTION_INFERENCE_FEATURE_ID]: KI_EXTRACTION_REASONING_EFFORT,
+  [SIGNIFICANT_EVENTS_KI_QUERY_GENERATION_INFERENCE_FEATURE_ID]:
+    KI_QUERY_GENERATION_REASONING_EFFORT,
+};
+
+/**
+ * Returns the reasoning configuration to bind for a feature's resolved
+ * connector, or `undefined` when no effort is configured for that
+ * feature/endpoint combination (for example a user-chosen connector).
+ *
+ * The inference plugin only sends `reasoning` to EIS (`elastic` provider)
+ * endpoints, so returning it for a non-EIS connector is harmless.
+ */
+export function getReasoningForFeatureConnector(
+  featureId: string,
+  connectorId: string
+): ChatCompleteReasoning | undefined {
+  const effort = REASONING_EFFORT_BY_FEATURE[featureId]?.[connectorId];
+  return effort ? { effort } : undefined;
+}
 
 /**
  * Registers Streams Significant Events parent + child features with the Inference Feature Registry.

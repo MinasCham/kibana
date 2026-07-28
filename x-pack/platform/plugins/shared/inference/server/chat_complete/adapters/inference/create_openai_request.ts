@@ -5,12 +5,14 @@
  * 2.0.
  */
 
+import { InferenceEndpointProvider } from '@kbn/inference-common';
 import { wrapWithSimulatedFunctionCalling } from '../../simulated_function_calling';
 import type { OpenAIRequest } from '../openai/types';
 import { messagesToOpenAI, toolChoiceToOpenAI, toolsToOpenAI } from '../openai';
 import type { CreateOpenAIRequestOptions } from './types';
 import { applyProviderTransforms } from './providers';
 import { getTemperatureIfValid } from '../../utils/get_temperature';
+import { getProvider } from './utils';
 
 export const createRequest = (options: CreateOpenAIRequestOptions): OpenAIRequest => {
   const {
@@ -21,7 +23,14 @@ export const createRequest = (options: CreateOpenAIRequestOptions): OpenAIReques
     simulatedFunctionCalling,
     temperature = 0,
     modelName,
+    reasoning,
   } = applyProviderTransforms(options);
+
+  // reasoning is currently only supported by the elastic provider (EIS)
+  const reasoningIfSupported =
+    reasoning && getProvider(options.connector) === InferenceEndpointProvider.Elastic
+      ? { reasoning }
+      : {};
 
   let request: OpenAIRequest;
   if (simulatedFunctionCalling) {
@@ -33,6 +42,7 @@ export const createRequest = (options: CreateOpenAIRequestOptions): OpenAIReques
     });
     request = {
       ...getTemperatureIfValid(temperature, { connector: options.connector, modelName }),
+      ...reasoningIfSupported,
       model: modelName,
       messages: messagesToOpenAI({ system: wrapped.system, messages: wrapped.messages }),
     };
@@ -42,6 +52,7 @@ export const createRequest = (options: CreateOpenAIRequestOptions): OpenAIReques
 
     request = {
       ...getTemperatureIfValid(temperature, { connector: options.connector, modelName }),
+      ...reasoningIfSupported,
       model: modelName,
       messages: messagesToOpenAI({ system, messages }),
       ...(hasTools

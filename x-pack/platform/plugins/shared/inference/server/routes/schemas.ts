@@ -65,6 +65,20 @@ export const chatCompleteBaseSchema = schema.object({
   ),
   temperature: schema.maybe(schema.number()),
   modelName: schema.maybe(schema.string()),
+  reasoning: schema.maybe(
+    schema.object({
+      effort: schema.maybe(
+        schema.oneOf([
+          schema.literal('xhigh'),
+          schema.literal('high'),
+          schema.literal('medium'),
+          schema.literal('low'),
+          schema.literal('minimal'),
+          schema.literal('none'),
+        ])
+      ),
+    })
+  ),
   metadata: schema.maybe(
     schema.object({
       connectorTelemetry: schema.maybe(

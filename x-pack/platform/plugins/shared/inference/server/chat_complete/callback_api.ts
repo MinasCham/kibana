@@ -210,6 +210,7 @@ function createChatCompletePipeline({
         metadata,
         modelName,
         temperature,
+        reasoning,
         toolChoice,
         tools,
         timeout,
@@ -263,6 +264,7 @@ function createChatCompletePipeline({
                 toolChoice,
                 tools,
                 temperature,
+                reasoning,
                 logger,
                 functionCalling,
                 modelName,
@@ -355,7 +357,11 @@ function resolveAndCreatePipeline({
                     } as SpanModel)
                   : undefined,
               chatComplete: (options) =>
-                inferenceEndpointAdapter.chatComplete({ ...options, executor }),
+                inferenceEndpointAdapter.chatComplete({
+                  ...options,
+                  provider: endpointMeta.provider,
+                  executor,
+                }),
             };
           }
         : async () => {
@@ -392,7 +398,11 @@ function resolveAndCreatePipeline({
                       } as SpanModel)
                     : undefined,
                 chatComplete: (options) =>
-                  inferenceEndpointAdapter.chatComplete({ ...options, executor: endpointExecutor }),
+                  inferenceEndpointAdapter.chatComplete({
+                    ...options,
+                    provider: endpointMeta.provider,
+                    executor: endpointExecutor,
+                  }),
               };
             }
 

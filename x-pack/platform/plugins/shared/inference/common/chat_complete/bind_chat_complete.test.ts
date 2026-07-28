@@ -41,6 +41,30 @@ describe('bindChatComplete', () => {
     });
   });
 
+  it('forwards bound reasoning to chatComplete', async () => {
+    const bound: BoundOptions = {
+      connectorId: 'some-id',
+      reasoning: { effort: 'low' },
+    };
+
+    const unbound: UnboundChatCompleteOptions = {
+      messages: [{ role: MessageRole.User, content: 'hello there' }],
+    };
+
+    const boundApi = bindChatComplete(chatComplete, bound);
+
+    await boundApi({ ...unbound });
+
+    expect(chatComplete).toHaveBeenCalledTimes(1);
+    expect(chatComplete).toHaveBeenCalledWith(
+      expect.objectContaining({
+        connectorId: 'some-id',
+        reasoning: { effort: 'low' },
+        messages: unbound.messages,
+      })
+    );
+  });
+
   it('forwards the response from chatComplete', async () => {
     const expectedReturnValue = Symbol('something');
     chatComplete.mockResolvedValue(expectedReturnValue as any);
